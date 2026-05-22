@@ -1,0 +1,80 @@
+{
+  "r_squared": 0.98,
+  "adj_r_squared": 0.9799,
+  "rmse": 0.8577,
+  "coefficients": {
+    "rice_price": {
+      "value": 0.108488,
+      "std_err": 0.005792,
+      "p_value": 0.0
+    },
+    "egg_price": {
+      "value": -0.403653,
+      "std_err": 0.035845,
+      "p_value": 0.0
+    },
+    "fish_price": {
+      "value": 0.069894,
+      "std_err": 0.000921,
+      "p_value": 0.0
+    },
+    "pork_price": {
+      "value": 0.053956,
+      "std_err": 0.000791,
+      "p_value": 0.0
+    },
+    "daily_wage": {
+      "value": -0.076385,
+      "std_err": 0.000445,
+      "p_value": 0.0
+    },
+    "cpi_b30": {
+      "value": -0.013182,
+      "std_err": 0.005032,
+      "p_value": 0.00888
+    },
+    "household_size": {
+      "value": 9.13622,
+      "std_err": 0.061925,
+      "p_value": 0.0
+    }
+  },
+  "feature_importance": [
+    {
+      "feature": "daily_wage",
+      "std_coef": -0.9226,
+      "rank": 1
+    },
+    {
+      "feature": "household_size",
+      "std_coef": 0.6837,
+      "rank": 2
+    },
+    {
+      "feature": "fish_price",
+      "std_coef": 0.4645,
+      "rank": 3
+    },
+    {
+      "feature": "pork_price",
+      "std_coef": 0.4483,
+      "rank": 4
+    },
+    {
+      "feature": "rice_price",
+      "std_coef": 0.0833,
+      "rank": 5
+    },
+    {
+      "feature": "egg_price",
+      "std_coef": -0.0828,
+      "rank": 6
+    },
+    {
+      "feature": "cpi_b30",
+      "std_coef": -0.026,
+      "rank": 7
+    }
+  ],
+  "summary_text": "                            OLS Regression Results                            \n==============================================================================\nDep. Variable:           days_to_feed   R-squared:                       0.980\nModel:                            OLS   Adj. R-squared:                  0.980\nMethod:                 Least Squares   F-statistic:                 1.182e+04\nDate:                Fri, 22 May 2026   Prob (F-statistic):               0.00\nTime:                        23:06:30   Log-Likelihood:                -2147.3\nNo. Observations:                1700   AIC:                             4311.\nDf Residuals:                    1692   BIC:                             4354.\nDf Model:                           7                                         \nCovariance Type:            nonrobust                                         \n==================================================================================\n                     coef    std err          t      P>|t|      [0.025      0.975]\n----------------------------------------------------------------------------------\nconst             -4.7711      0.366    -13.025      0.000      -5.490      -4.053\nrice_price         0.1085      0.006     18.731      0.000       0.097       0.120\negg_price         -0.4037      0.036    -11.261      0.000      -0.474      -0.333\nfish_price         0.0699      0.001     75.855      0.000       0.068       0.072\npork_price         0.0540      0.001     68.173      0.000       0.052       0.056\ndaily_wage        -0.0764      0.000   -171.669      0.000      -0.077      -0.076\ncpi_b30           -0.0132      0.005     -2.620      0.009      -0.023      -0.003\nhousehold_size     9.1362      0.062    147.536      0.000       9.015       9.258\n==============================================================================\nOmnibus:                      347.188   Durbin-Watson:                   0.122\nProb(Omnibus):                  0.000   Jarque-Bera (JB):              711.087\nSkew:                           1.184   Prob(JB):                    3.89e-155\nKurtosis:                       5.106   Cond. No.                     9.46e+03\n==============================================================================\n\nNotes:\n[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.\n[2] The condition number is large, 9.46e+03. This might indicate that there are\nstrong multicollinearity or other numerical problems."
+}
