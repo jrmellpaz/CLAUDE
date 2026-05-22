@@ -1,4 +1,4 @@
-# Days to Feed
+# CLAUDE: Computing Living Affordability Using Data Exploration
 
 An interactive dashboard that answers: **"How many days of minimum wage does it take to feed a Filipino household?"**
 
