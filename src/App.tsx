@@ -1,6 +1,7 @@
 import { useState, Activity } from "react";
 import { useData } from "@/hooks/useData";
 import { useBasket } from "@/hooks/useBasket";
+import { useTheme, type Theme } from "@/hooks/useTheme";
 import { getLatestMonth, getUniqueRegions, getEarliestMonth } from "@/lib/utils";
 import { Header } from "@/components/Header";
 import { ViewTabs, type View } from "@/components/ViewTabs";
@@ -10,13 +11,57 @@ import { TrendChart } from "@/components/TrendChart";
 import { DriversChart } from "@/components/DriversChart";
 import { AIAnalysis } from "@/components/AIAnalysis";
 import { Card, CardContent } from "@/components/ui/card";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ComputerIcon, Sun03Icon, Moon02Icon } from "@hugeicons/core-free-icons";
 
-function Navbar() {
+const THEME_OPTIONS: { value: Theme; icon: typeof Sun03Icon; label: string }[] = [
+  { value: "light",  icon: Sun03Icon,    label: "Light"  },
+  { value: "system", icon: ComputerIcon, label: "System" },
+  { value: "dark",   icon: Moon02Icon,   label: "Dark"   },
+];
+
+function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+  return (
+    <div
+      className="flex items-center gap-0.5 rounded-full p-1"
+      style={{ background: "oklch(0.16 0.05 160 / 60%)" }}
+      role="group"
+      aria-label="Color theme"
+    >
+      {THEME_OPTIONS.map(({ value, icon, label }) => {
+        const active = theme === value;
+        return (
+          <button
+            key={value}
+            onClick={() => setTheme(value)}
+            aria-label={label}
+            aria-pressed={active}
+            title={label}
+            className="relative flex items-center justify-center rounded-full w-7 h-7 transition-colors duration-150"
+            style={
+              active
+                ? {
+                    background: "oklch(0.32 0.08 160 / 80%)",
+                    color: "var(--nav-fg)",
+                    boxShadow: "0 1px 3px oklch(0 0 0 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.08)",
+                  }
+                : { color: "oklch(0.60 0.06 155)" }
+            }
+          >
+            <HugeiconsIcon icon={icon} strokeWidth={active ? 2 : 1.5} className="size-3.5" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Navbar({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
   return (
     <nav className="app-navbar">
-      <div className="mx-auto max-w-6xl px-4 h-12 flex items-center">
+      <div className="mx-auto max-w-6xl px-4 h-12 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="app-brand">
+          <span className="app-brand select-none">
             CLAUDE <span className="app-brand-pip" />
           </span>
           <span
@@ -24,12 +69,13 @@ function Navbar() {
             style={{ background: "oklch(1 0 0 / 18%)" }}
           />
           <span
-            className="hidden sm:block text-xs font-medium tracking-wide"
+            className="hidden sm:block text-xs font-medium tracking-wide select-none"
             style={{ color: "oklch(0.72 0.04 155)" }}
           >
             Computing Living Affordability Using Data Exploration
           </span>
         </div>
+        <ThemeToggle theme={theme} setTheme={setTheme} />
       </div>
     </nav>
   );
@@ -44,7 +90,7 @@ function Footer() {
       >
         {/* Top row */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
-          <div>
+          <div className="select-none">
             <p className="app-brand text-[1.05rem]">
               CLAUDE <span className="app-brand-pip" />
             </p>
@@ -90,7 +136,7 @@ function Footer() {
             className="text-[0.6875rem]"
             style={{ color: "oklch(0.45 0.04 155)" }}
           >
-            © {new Date().getFullYear()} CLAUDE Project
+            © {new Date().getFullYear()} CLAUDE Data Analytics Project
           </p>
         </div>
       </div>
@@ -101,13 +147,14 @@ function Footer() {
 function App() {
   const { panel, regression, geo, loading, error } = useData();
   const { basket, setBasket, resetBasket, computeDaysToFeed } = useBasket();
+  const { theme, setTheme } = useTheme();
   const [view, setView] = useState<View>("map");
   const [region, setRegion] = useState<string>("PHILIPPINES");
 
   if (loading) {
     return (
       <>
-        <Navbar />
+        <Navbar theme={theme} setTheme={setTheme} />
         <div className="flex min-h-[80vh] items-center justify-center">
           <div className="text-center space-y-3">
             <div className="loading-spinner mx-auto" />
@@ -121,7 +168,7 @@ function App() {
   if (error) {
     return (
       <>
-        <Navbar />
+        <Navbar theme={theme} setTheme={setTheme} />
         <div className="flex min-h-[80vh] items-center justify-center">
           <div className="text-center">
             <p className="text-lg font-semibold text-destructive">Failed to load data</p>
@@ -170,7 +217,7 @@ function App() {
 
   return (
     <>
-      <Navbar />
+      <Navbar theme={theme} setTheme={setTheme} />
 
       <div className="mx-auto max-w-6xl px-4 py-6">
         <Header

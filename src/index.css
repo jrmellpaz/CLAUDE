@@ -144,6 +144,17 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+  ::selection {
+    background-color: oklch(from var(--primary) l c h / 0.25);
+    color: var(--foreground);
+  }
+
+  /* Footer / navbar use a dark green bg — boost selection contrast there */
+  .app-navbar ::selection,
+  footer ::selection {
+    background-color: oklch(from var(--nav-accent) l c h / 0.45);
+    color: var(--nav-fg);
+  }
   body {
     @apply bg-background text-foreground;
   }

@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CLAUDE: Computing Living Affordability Using Data Exploration</title>
+    <!-- Theme bootstrap: runs synchronously before first paint to avoid flash -->
+    <script>
+      (function () {
+        var t = localStorage.getItem('theme') || 'system';
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (t === 'dark' || (t === 'system' && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+        // Align native browser primitives (inputs, spinners, scrollbars) with
+        // the chosen theme so they don't bleed the OS preference through.
+        document.documentElement.style.colorScheme =
+          t === 'light' ? 'light' : t === 'dark' ? 'dark' : 'light dark';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

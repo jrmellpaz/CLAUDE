@@ -14,7 +14,7 @@ export interface UseAIAnalysisReturn extends AIAnalysisState {
   cancel: () => void;
 }
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-3.1-flash-lite";
 
 function getClient() {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;

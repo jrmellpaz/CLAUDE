@@ -6,13 +6,16 @@ import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   SparklesIcon,
-  RefreshIcon,
   Cancel01Icon,
   Alert01Icon,
+  Refresh01Icon,
+  VolumeHighIcon,
+  StopCircleIcon,
 } from "@hugeicons/core-free-icons";
 import type { PanelRow, RegressionResult } from "@/types";
 import { buildAnalysisPrompt, buildTrendData } from "@/lib/buildPrompt";
 import { useAIAnalysis } from "@/hooks/useAIAnalysis";
+import { useVoice } from "@/hooks/useVoice";
 import { getLatestMonth, getEarliestMonth } from "@/lib/utils";
 
 interface AIAnalysisProps {
@@ -160,6 +163,7 @@ export function AIAnalysis({
   computeDaysToFeed,
 }: AIAnalysisProps) {
   const { markdown, status, error, generate, cancel } = useAIAnalysis();
+  const { voiceStatus, speak, stopSpeaking } = useVoice();
 
   const latestMonth = getLatestMonth(panel);
   const earliestMonth = getEarliestMonth(panel);
@@ -175,6 +179,13 @@ export function AIAnalysis({
     }
     if (status === "idle" || status === "done" || status === "error") {
       scrolled.current = false;
+    }
+  }, [status]);
+
+  // Stop any ongoing speech when a new generation starts.
+  useEffect(() => {
+    if (status === "loading" || status === "streaming") {
+      stopSpeaking();
     }
   }, [status]);
 
@@ -203,7 +214,10 @@ export function AIAnalysis({
   };
 
   const isRunning = status === "loading" || status === "streaming";
+  const isDone = status === "done";
   const hasContent = markdown.length > 0;
+  const isSpeaking = voiceStatus === "speaking";
+  const voiceSupported = voiceStatus !== "unsupported";
 
   return (
     <section ref={cardRef} className="scroll-mt-4">
@@ -211,18 +225,48 @@ export function AIAnalysis({
       <div className="flex items-center justify-between mb-3 gap-3">
         <h2 className="text-sm font-semibold">AI Insights</h2>
 
-        {/* Only show Stop / Regenerate in the header — Generate moves inside the card */}
-        {isRunning ? (
-          <Button variant="outline" onClick={cancel} className="gap-2">
-            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.5} className="size-4" />
-            Stop
-          </Button>
-        ) : hasContent ? (
-          <Button variant="outline" onClick={handleGenerate} disabled={daysToFeed === undefined} className="gap-2">
-            <HugeiconsIcon icon={RefreshIcon} strokeWidth={1.5} className="size-4" />
-            Regenerate
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {/* Voice button — only when fully streamed */}
+          {isDone && hasContent && voiceSupported && (
+            isSpeaking ? (
+              <Button
+                variant="outline"
+                onClick={stopSpeaking}
+                className="gap-2"
+              >
+                <HugeiconsIcon icon={StopCircleIcon} strokeWidth={1.5} className="size-4" />
+                Stop reading
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => speak(markdown)}
+                className="gap-2"
+              >
+                <HugeiconsIcon icon={VolumeHighIcon} strokeWidth={1.5} className="size-4" />
+                Read aloud
+              </Button>
+            )
+          )}
+
+          {/* Stop generation / Regenerate */}
+          {isRunning ? (
+            <Button variant="outline" onClick={cancel} className="gap-2">
+              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.5} className="size-4" />
+              Stop
+            </Button>
+          ) : hasContent ? (
+            <Button
+              variant="outline"
+              onClick={handleGenerate}
+              disabled={daysToFeed === undefined}
+              className="gap-2"
+            >
+              <HugeiconsIcon icon={Refresh01Icon} strokeWidth={1.5} className="size-4" />
+              Regenerate
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {/* Content card */}
@@ -231,10 +275,7 @@ export function AIAnalysis({
           {/* Idle empty state — Generate button lives here */}
           {status === "idle" && !hasContent && (
             <div className="flex flex-col items-center justify-center py-10 text-center gap-4">
-              <div
-                className="rounded-full p-3"
-                style={{ background: "oklch(0.93 0.05 155 / 0.35)" }}
-              >
+              <div className="rounded-full p-3 bg-primary/15 dark:bg-primary/25">
                 <HugeiconsIcon
                   icon={SparklesIcon}
                   strokeWidth={1.5}
@@ -314,7 +355,7 @@ export function AIAnalysis({
               {isRunning && <StreamingIndicator region={region} />}
               <MarkdownContent content={markdown} />
               {status === "streaming" && <StreamingCursor />}
-              {status === "done" && (
+              {isDone && (
                 <p className="mt-4 text-[0.65rem] text-muted-foreground/60 border-t border-border/50 pt-3">
                   Generated by <strong>CLAUDE Advisor</strong> · AI-generated
                   — always verify with official PSA/NWPC data.

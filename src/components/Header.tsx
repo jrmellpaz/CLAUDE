@@ -30,9 +30,8 @@ export function Header({
     <header className="mb-6">
       {/* Question heading */}
       <div className="mb-4">
-        <h1 className="question-heading text-2xl sm:text-[1.75rem] lg:text-3xl">
-          How many days of minimum wage does it take
-          <br className="hidden sm:block" /> to feed a household?
+        <h1 className="question-heading text-2xl sm:text-[1.75rem] lg:text-3xl text-balance">
+          How many days of minimum wage does it take to feed a household?
         </h1>
         <p className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
           <span
