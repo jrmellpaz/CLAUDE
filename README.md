@@ -9,8 +9,10 @@ It tracks food affordability across all 17 Philippine regions from January 2018 
 - **Choropleth map** — color-coded Philippine regions by days-to-feed, with tooltips and click-to-select
 - **Trend chart** — monthly time series comparing a selected region against the national average
 - **Drivers chart** — OLS regression coefficients showing which factors (rice price, wage, CPI, etc.) most influence the metric
-- **Basket editor** — adjust food quantities (rice, eggs, galunggong, pork) to see how the metric changes in real time
+- **Basket editor** — floating action button opens a side/bottom sheet to adjust food quantities (rice, eggs, galunggong, pork); recalculates days-to-feed in real time
 - **KPI cards** — days to feed, change vs. 2018 baseline, daily minimum wage, and monthly food cost
+- **AI Insights** — on-demand plain-language analysis powered by Google Gemini, streamed token-by-token with a live cursor; supports stop/regenerate and read-aloud (Web Speech API)
+- **Theme toggle** — light, dark, and system (follows OS preference) modes, persisted across sessions
 
 ## Project Structure
 
@@ -26,24 +28,31 @@ It tracks food affordability across all 17 Philippine regions from January 2018 
 │       ├── regression.json     #   Regression results & feature importance
 │       └── ph-regions.geojson.json  # Philippine region boundaries
 ├── src/
-│   ├── App.tsx                 # Root layout, view switching, region selection
+│   ├── App.tsx                 # Root layout, Navbar, Footer, view switching, region selection
 │   ├── main.tsx                # React entry point
 │   ├── index.css               # Tailwind CSS + theme variables
 │   ├── components/
-│   │   ├── Header.tsx          # Title + KPI cards
+│   │   ├── Header.tsx          # Question heading, RegionPicker, KPI cards
 │   │   ├── ViewTabs.tsx        # Map / Trend / Drivers tab switcher
-│   │   ├── RegionPicker.tsx    # Region dropdown
+│   │   ├── RegionPicker.tsx    # Region dropdown (shadcn Select)
 │   │   ├── BasketEditor.tsx    # Food basket quantity editor
+│   │   ├── BasketSheet.tsx     # FAB + side/bottom Sheet wrapping BasketEditor
 │   │   ├── ChoroplethMap.tsx   # D3 geo map
 │   │   ├── TrendChart.tsx      # Recharts line chart
-│   │   ├── DriversChart.tsx    # Recharts bar chart (regression)
-│   │   └── ui/                 # shadcn/ui primitives (Button, Chart)
+│   │   ├── DriversChart.tsx    # Recharts bar chart (regression coefficients)
+│   │   ├── AIAnalysis.tsx      # AI Insights section with streaming UI + voice
+│   │   └── ui/                 # shadcn/ui primitives (Button, Card, Sheet, Tabs, …)
 │   ├── hooks/
 │   │   ├── useData.ts          # Fetches panel, regression, and GeoJSON
-│   │   └── useBasket.ts        # Basket state and days-to-feed computation
+│   │   ├── useBasket.ts        # Basket state and days-to-feed computation
+│   │   ├── useTheme.ts         # Light / dark / system theme with localStorage persistence
+│   │   ├── useAIAnalysis.ts    # Gemini streaming state machine (idle → loading → streaming → done/error)
+│   │   ├── useVoice.ts         # Web Speech API wrapper (speak / stop, strips markdown before reading)
+│   │   └── useMediaQuery.ts    # SSR-safe media query hook (used for sheet placement)
 │   ├── lib/
 │   │   ├── constants.ts        # Default basket, feature labels, region list
-│   │   ├── utils.ts            # Formatting helpers
+│   │   ├── buildPrompt.ts      # Constructs the Gemini analysis prompt from dashboard state
+│   │   ├── utils.ts            # Formatting helpers (formatPeso, getLatestMonth, …)
 │   │   └── province-to-region.ts
 │   └── types/
 │       └── index.ts            # PanelRow, BasketItem, RegressionResult
@@ -65,12 +74,16 @@ Raw data is compiled into `public/data/raw/compiled_MASTER_wage_price_analysis.x
 
 ## Tech Stack
 
-- **React 19** with React Compiler (automatic memoization)
+- **React 19** with React Compiler (automatic memoization) and the `Activity` API for tab-panel visibility
 - **TypeScript 6**
 - **Vite 8** (dev server & build)
-- **Tailwind CSS 4** + **shadcn/ui** (base-luma style)
+- **Tailwind CSS 4** + **shadcn/ui** (built on Base UI, not Radix)
 - **D3** for the choropleth map
-- **Recharts** for trend and drivers charts
+- **Recharts 3** for trend and drivers charts
+- **@hugeicons/react** for icons
+- **Google Gemini** (`gemini-3.1-flash-lite` via `@google/genai`) for AI analysis
+- **react-markdown** + **remark-gfm** for rendering streamed Gemini output
+- **Web Speech API** for read-aloud (browser-native, no third-party dependency)
 - **pnpm** for package management
 - **Python / Pandas** for the data pipeline (Jupyter notebooks)
 
@@ -98,6 +111,22 @@ pnpm build
 pnpm preview
 ```
 
+### AI Insights (optional)
+
+The AI Insights panel requires a free Google Gemini API key:
+
+1. Get a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — no credit card needed.
+2. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+3. Add your key:
+   ```
+   VITE_GEMINI_API_KEY=your_key_here
+   ```
+
+If no key is configured the rest of the dashboard works normally; the "Generate Analysis" button will show an error prompt with setup instructions.
+
 ### Regenerating Data (Optional)
 
 If you need to update the data from new source files:
@@ -115,6 +144,11 @@ Run the notebooks in order:
 
 ## Key Metric
 
-**Days to feed** = (daily per-person basket cost x household size x 30) / daily minimum wage
+**Days to feed** = (daily per-person basket cost × household size × 30) / daily minimum wage
 
 It represents how many days a minimum-wage earner must work in a month solely to cover their household's basic food costs. A value above 30 means a single minimum wage cannot cover monthly food expenses.
+
+## Authors
+
+- Jermel Lapaz
+- Mary Jannin Ramacula
