@@ -15,26 +15,32 @@ interface TrendChartProps {
   computeDaysToFeed: (row: PanelRow) => number;
 }
 
-// Palette for extra regions (avoids chart-1 / chart-4 used by selected / national)
+// Palette for extra regions — as many distinct dark colors as possible first,
+// then light variants to fill remaining slots.
+// Greens are included but at hues clearly offset from --chart-1/4 (~165°).
+// Brown = dark low-chroma orange (~hue 35°, L 0.42).
+// Amber is intentionally lighter so it reads as "yellow" not "brown".
 const EXTRA_COLORS = [
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-5)",
-  "oklch(0.60 0.18 60)",
-  "oklch(0.55 0.18 290)",
-  "oklch(0.55 0.18 200)",
-  "oklch(0.60 0.20 320)",
-  "oklch(0.60 0.18 170)",
-  "oklch(0.55 0.20 15)",
-  "oklch(0.55 0.18 240)",
-  "oklch(0.62 0.16 100)",
-  "oklch(0.55 0.18 340)",
-  "oklch(0.60 0.20 0)",
-  "oklch(0.55 0.16 135)",
-  "oklch(0.58 0.18 220)",
-  "oklch(0.62 0.14 75)",
-  "oklch(0.55 0.20 260)",
-  "oklch(0.60 0.18 185)",
+  // ── Dark tier (14 colors) ───────────────────────────────────────────
+  "oklch(0.52 0.24 12)",   //  0  deep red
+  "oklch(0.42 0.11 35)",   //  1  brown
+  "oklch(0.60 0.21 42)",   //  2  orange
+  "oklch(0.71 0.17 67)",   //  3  amber (light by design — reads yellow)
+  "oklch(0.55 0.15 90)",   //  4  olive
+  "oklch(0.52 0.19 115)",  //  5  lime / yellow-green
+  "oklch(0.44 0.16 138)",  //  6  dark forest green
+  "oklch(0.56 0.19 192)",  //  7  deep teal
+  "oklch(0.56 0.23 220)",  //  8  deep sky-blue
+  "oklch(0.52 0.25 250)",  //  9  deep blue
+  "oklch(0.48 0.25 272)",  // 10  deep indigo
+  "oklch(0.52 0.24 296)",  // 11  deep purple
+  "oklch(0.55 0.23 320)",  // 12  violet
+  "oklch(0.57 0.22 342)",  // 13  deep rose
+  // ── Light tier (4 colors, for overflow beyond 14 regions) ──────────
+  "oklch(0.69 0.19 128)",  // 14  light green
+  "oklch(0.72 0.20 12)",   // 15  light coral
+  "oklch(0.70 0.19 224)",  // 16  light sky-blue
+  "oklch(0.70 0.20 290)",  // 17  light lavender
 ];
 
 interface TrendTooltipProps {
@@ -148,19 +154,31 @@ export function TrendChart({ data, region, computeDaysToFeed }: TrendChartProps)
     return entry;
   });
 
+  // Assign a stable color to each region in linedRegions.
+  // The selected region (when not PHILIPPINES) always gets --chart-1.
+  // Every other region gets the next slot in EXTRA_COLORS sequentially — no
+  // offset tricks that accidentally map two indices to the same slot.
+  const regionColors = new Map<string, string>();
+  let extraIdx = 0;
+  for (const r of linedRegions) {
+    if (r === region && region !== "PHILIPPINES") {
+      regionColors.set(r, "var(--chart-1)");
+    } else {
+      regionColors.set(r, EXTRA_COLORS[extraIdx % EXTRA_COLORS.length]);
+      extraIdx++;
+    }
+  }
+
   // Build dynamic ChartConfig
   const chartConfig: ChartConfig = {
     national: { label: "National avg.", color: "var(--chart-4)" },
   };
-  linedRegions.forEach((r, i) => {
+  for (const r of linedRegions) {
     chartConfig[`rgn__${r}`] = {
       label: r === region ? `${r} (selected)` : r,
-      color:
-        i === 0 && r === region
-          ? "var(--chart-1)"
-          : EXTRA_COLORS[(i === 0 ? 0 : i - 1) % EXTRA_COLORS.length],
+      color: regionColors.get(r)!,
     };
-  });
+  }
 
   // Extras that are currently toggled (for the button styling)
   const otherRegions = allRegions.filter((r) => r !== region);
@@ -176,10 +194,7 @@ export function TrendChart({ data, region, computeDaysToFeed }: TrendChartProps)
           <div className="flex flex-wrap gap-1.5">
             {otherRegions.map((r) => {
               const active = extraRegions.has(r);
-              const colorIdx =
-                linedRegions.indexOf(r) > 0
-                  ? (linedRegions.indexOf(r) - 1) % EXTRA_COLORS.length
-                  : linedRegions.indexOf(r) % EXTRA_COLORS.length;
+              const activeColor = regionColors.get(r);
               return (
                 <Button
                   key={r}
@@ -188,10 +203,10 @@ export function TrendChart({ data, region, computeDaysToFeed }: TrendChartProps)
                   onClick={() => toggleRegion(r)}
                   className="rounded-full transition-all"
                   style={
-                    active
+                    active && activeColor
                       ? {
-                          background: EXTRA_COLORS[colorIdx],
-                          borderColor: EXTRA_COLORS[colorIdx],
+                          background: activeColor,
+                          borderColor: activeColor,
                           color: "white",
                         }
                       : undefined
@@ -239,16 +254,12 @@ export function TrendChart({ data, region, computeDaysToFeed }: TrendChartProps)
           />
 
           {/* One line per region to display */}
-          {linedRegions.map((r, i) => (
+          {linedRegions.map((r) => (
             <Line
               key={r}
               type="monotone"
               dataKey={`rgn__${r}`}
-              stroke={
-                i === 0 && r === region
-                  ? "var(--chart-1)"
-                  : EXTRA_COLORS[(i === 0 ? 0 : i - 1) % EXTRA_COLORS.length]
-              }
+              stroke={regionColors.get(r)}
               strokeWidth={r === region ? 2.5 : 1.5}
               dot={false}
               name={`rgn__${r}`}
