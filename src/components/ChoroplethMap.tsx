@@ -61,58 +61,103 @@ export function ChoroplethMap({
 
     svg.selectAll("*").remove();
 
+    // ── Drop-shadow filter for the raised/selected region ──────────────────
+    const defs = svg.append("defs");
+
+    const filter = defs.append("filter")
+      .attr("id", "raised-shadow")
+      .attr("x", "-30%").attr("y", "-30%")
+      .attr("width", "160%").attr("height", "160%");
+
+    filter.append("feDropShadow")
+      .attr("dx", "0")
+      .attr("dy", "3")
+      .attr("stdDeviation", "4")
+      .attr("flood-color", "rgba(0,0,0,0.45)");
+    // ───────────────────────────────────────────────────────────────────────
+
     const g = svg.append("g");
 
-    g.selectAll("path")
-      .data(regionGeo.features)
+    const attachHandlers = (sel: d3.Selection<SVGPathElement, (typeof regionGeo.features)[number], SVGGElement, unknown>) => {
+      sel
+        .on("click", (_, d) => {
+          const name = (d.properties?.region ?? "") as string;
+          if (name) onRegionClick(name);
+        })
+        .on("mouseenter", (event, d) => {
+          const name = (d.properties?.region ?? "") as string;
+          const dtf = regionDtf.get(name);
+          tooltip
+            .style("opacity", "1")
+            .style("left", `${event.offsetX + 12}px`)
+            .style("top", `${event.offsetY - 28}px`)
+            .html(
+              `<strong>${name}</strong><br/>Days to feed: ${
+                dtf !== undefined ? dtf.toFixed(1) : "N/A"
+              }`
+            );
+        })
+        .on("mousemove", (event) => {
+          tooltip
+            .style("left", `${event.offsetX + 12}px`)
+            .style("top", `${event.offsetY - 28}px`);
+        })
+        .on("mouseleave", () => {
+          tooltip.style("opacity", "0");
+        });
+    };
+
+    // Unselected regions rendered first (below)
+    const unselected = g.selectAll<SVGPathElement, (typeof regionGeo.features)[number]>("path.region")
+      .data(regionGeo.features.filter(d => (d.properties?.region ?? "") !== selectedRegion))
       .join("path")
+      .attr("class", "region")
       .attr("d", path as never)
       .attr("fill", (d) => {
         const name = (d.properties?.region ?? "") as string;
         const dtf = regionDtf.get(name);
         return dtf !== undefined ? colorScale(dtf) : "#e5e7eb";
       })
-      .attr("stroke", (d) => {
-        const name = (d.properties?.region ?? "") as string;
-        return name === selectedRegion ? "#000" : "#fff";
-      })
-      .attr("stroke-width", (d) => {
-        const name = (d.properties?.region ?? "") as string;
-        return name === selectedRegion ? 2 : 0.5;
-      })
-      .attr("cursor", "pointer")
-      .on("click", (_, d) => {
-        const name = (d.properties?.region ?? "") as string;
-        if (name) onRegionClick(name);
-      })
-      .on("mouseenter", (event, d) => {
-        const name = (d.properties?.region ?? "") as string;
-        const dtf = regionDtf.get(name);
-        tooltip
-          .style("opacity", "1")
-          .style("left", `${event.offsetX + 12}px`)
-          .style("top", `${event.offsetY - 28}px`)
-          .html(
-            `<strong>${name}</strong><br/>Days to feed: ${
-              dtf !== undefined ? dtf.toFixed(1) : "N/A"
-            }`
-          );
-      })
-      .on("mousemove", (event) => {
-        tooltip
-          .style("left", `${event.offsetX + 12}px`)
-          .style("top", `${event.offsetY - 28}px`);
-      })
-      .on("mouseleave", () => {
-        tooltip.style("opacity", "0");
-      });
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 0.5)
+      .attr("cursor", "pointer");
+
+    attachHandlers(unselected);
+
+    // Selected region rendered last (on top) with raised effect
+    const selectedFeatures = regionGeo.features.filter(d => (d.properties?.region ?? "") === selectedRegion);
+    if (selectedFeatures.length > 0) {
+      const selectedPaths = g.selectAll<SVGPathElement, (typeof regionGeo.features)[number]>("path.region-selected")
+        .data(selectedFeatures)
+        .join("path")
+        .attr("class", "region-selected")
+        .attr("d", path as never)
+        .attr("fill", (d) => {
+          const name = (d.properties?.region ?? "") as string;
+          const dtf = regionDtf.get(name);
+          return dtf !== undefined ? colorScale(dtf) : "#e5e7eb";
+        })
+        .attr("stroke", "#1a1a1a")
+        .attr("stroke-width", 1.5)
+        .attr("cursor", "pointer")
+        .attr("filter", "url(#raised-shadow)")
+        .attr("transform", (d) => {
+          // Scale from centroid so the region "lifts" outward from its own center
+          const [cx, cy] = path.centroid(d);
+          const scale = 1.06;
+          const tx = cx - scale * cx;
+          const ty = cy - scale * cy;
+          return `translate(${tx},${ty}) scale(${scale})`;
+        });
+
+      attachHandlers(selectedPaths);
+    }
 
     const legendWidth = 200;
     const legendHeight = 10;
     const legendX = width - legendWidth - 20;
     const legendY = height - 30;
 
-    const defs = svg.append("defs");
     const gradient = defs
       .append("linearGradient")
       .attr("id", "legend-gradient");

@@ -38,7 +38,7 @@ export function Header({
             className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
             style={{ background: "var(--primary)" }}
           />
-          Tracking food affordability across Philippine regions · 2018–present
+          Tracking food affordability across Philippine regions (2018–present)
         </p>
       </div>
 

@@ -2,7 +2,7 @@ import { useState, Activity } from "react";
 import { useData } from "@/hooks/useData";
 import { useBasket } from "@/hooks/useBasket";
 import { useTheme, type Theme } from "@/hooks/useTheme";
-import { getLatestMonth, getUniqueRegions, getEarliestMonth } from "@/lib/utils";
+import { getLatestMonth, getUniqueRegions, getEarliestMonth, formatPeso } from "@/lib/utils";
 import { Header } from "@/components/Header";
 import { ViewTabs, type View } from "@/components/ViewTabs";
 import { BasketSheet } from "@/components/BasketSheet";
@@ -11,8 +11,9 @@ import { TrendChart } from "@/components/TrendChart";
 import { DriversChart } from "@/components/DriversChart";
 import { AIAnalysis } from "@/components/AIAnalysis";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ComputerIcon, Sun03Icon, Moon02Icon } from "@hugeicons/core-free-icons";
+import { ComputerIcon, Sun03Icon, Moon02Icon, ShoppingBasket01Icon } from "@hugeicons/core-free-icons";
 
 const THEME_OPTIONS: { value: Theme; icon: typeof Sun03Icon; label: string }[] = [
   { value: "light",  icon: Sun03Icon,    label: "Light"  },
@@ -83,7 +84,7 @@ function Navbar({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => voi
 
 function Footer() {
   return (
-    <footer className="mt-10 px-4 pb-8 mx-auto max-w-6xl">
+    <footer className="mt-10 px-4 pb-4">
       <div
         className="rounded-3xl overflow-hidden px-8 py-7"
         style={{ background: "var(--nav-bg)", color: "var(--nav-fg)" }}
@@ -150,6 +151,7 @@ function App() {
   const { theme, setTheme } = useTheme();
   const [view, setView] = useState<View>("map");
   const [region, setRegion] = useState<string>("PHILIPPINES");
+  const [basketOpen, setBasketOpen] = useState(false);
 
   if (loading) {
     return (
@@ -214,6 +216,14 @@ function App() {
 
   const monthlyBasket =
     dtf !== undefined && selected ? dtf * selected.dailyWage : undefined;
+
+  const fabEnabledCount = basket.filter((b) => b.enabled).length;
+  const fabMonthlyCost = selected
+    ? basket.filter((b) => b.enabled).reduce((sum, item) => {
+        const price = Number(selected[item.key as keyof typeof selected]) || 0;
+        return sum + item.qty * price;
+      }, 0) * selected.householdSize * 30
+    : 0;
 
   return (
     <>
@@ -281,10 +291,32 @@ function App() {
         />
       </div>
 
+      {/* Sticky FAB — floats above content, lifts away before the footer */}
+      <div className="sticky bottom-0 h-0 overflow-visible pointer-events-none">
+        <div className="absolute bottom-6 right-6 pointer-events-auto">
+          <Button
+            onClick={() => setBasketOpen(true)}
+            className="z-40 size-16 p-0 rounded-full shadow-lg shadow-primary/30 sm:size-auto sm:h-16 sm:pl-5 sm:pr-6 sm:gap-3"
+          >
+            <HugeiconsIcon icon={ShoppingBasket01Icon} strokeWidth={2} className="size-6 shrink-0 sm:size-6" />
+            <span className="hidden sm:flex flex-col items-start leading-none gap-1">
+              <span className="text-sm font-semibold">Food basket</span>
+              {selected && (
+                <span className="text-xs font-normal opacity-80">
+                  {formatPeso(fabMonthlyCost)}/mo · {fabEnabledCount} items
+                </span>
+              )}
+            </span>
+          </Button>
+        </div>
+      </div>
+
       <Footer />
 
-      {/* Floating basket — renders its own FAB + Sheet */}
+      {/* Basket sheet — no FAB, controlled externally */}
       <BasketSheet
+        open={basketOpen}
+        onOpenChange={setBasketOpen}
         basket={basket}
         onChange={setBasket}
         onReset={resetBasket}

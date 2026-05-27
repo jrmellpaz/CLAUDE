@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import type { TooltipProps } from "recharts";
 import type { PanelRow } from "@/types";
 import { formatMonth } from "@/lib/utils";
 
@@ -39,6 +37,50 @@ const EXTRA_COLORS = [
   "oklch(0.55 0.20 260)",
   "oklch(0.60 0.18 185)",
 ];
+
+function TrendTooltip({ active, payload, label }: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null;
+
+  // Sort: national first, then by value descending
+  const sorted = [...payload].sort((a, b) => {
+    if (a.name === "national") return -1;
+    if (b.name === "national") return 1;
+    return (b.value ?? 0) - (a.value ?? 0);
+  });
+
+  return (
+    <div className="rounded-lg border border-border bg-background shadow-lg text-xs min-w-[160px]" style={{ zIndex: 9999 }}>
+      <p className="px-3 pt-2.5 pb-1.5 font-semibold text-foreground border-b border-border/60">
+        {label}
+      </p>
+      <div className="px-3 py-2 space-y-1">
+        {sorted.map((entry) => {
+          const name =
+            entry.name === "national"
+              ? "National avg."
+              : String(entry.name).replace("rgn__", "");
+          return (
+            <div
+              key={entry.name}
+              className="flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className="size-2 shrink-0 rounded-sm"
+                  style={{ background: entry.color }}
+                />
+                <span className="text-muted-foreground truncate">{name}</span>
+              </div>
+              <span className="font-medium tabular-nums text-foreground shrink-0">
+                {Number(entry.value).toFixed(2)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function TrendChart({ data, region, computeDaysToFeed }: TrendChartProps) {
   const months = Array.from(new Set(data.map((r) => r.month))).sort();
@@ -178,8 +220,7 @@ export function TrendChart({ data, region, computeDaysToFeed }: TrendChartProps)
               style: { fontSize: 12 },
             }}
           />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <ChartLegend content={<ChartLegendContent payload={[]} />} />
+          <ChartTooltip content={<TrendTooltip />} />
 
           {/* National average — always shown */}
           <Line
@@ -210,6 +251,30 @@ export function TrendChart({ data, region, computeDaysToFeed }: TrendChartProps)
           ))}
         </LineChart>
       </ChartContainer>
+
+      {/* Wrapping legend */}
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-1 text-xs text-muted-foreground">
+        {Object.entries(chartConfig).map(([key, cfg]) => (
+          <div key={key} className="flex items-center gap-1.5">
+            {key === "national" ? (
+              <svg width="18" height="10" className="shrink-0">
+                <line
+                  x1="0" y1="5" x2="18" y2="5"
+                  stroke={cfg.color as string}
+                  strokeWidth="1.5"
+                  strokeDasharray="5 2.5"
+                />
+              </svg>
+            ) : (
+              <span
+                className="size-2 shrink-0 rounded-sm"
+                style={{ background: cfg.color as string }}
+              />
+            )}
+            <span>{cfg.label as string}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
