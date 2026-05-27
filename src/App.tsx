@@ -1,14 +1,102 @@
-import { useState } from "react";
+import { useState, Activity } from "react";
 import { useData } from "@/hooks/useData";
 import { useBasket } from "@/hooks/useBasket";
 import { getLatestMonth, getUniqueRegions, getEarliestMonth } from "@/lib/utils";
 import { Header } from "@/components/Header";
 import { ViewTabs, type View } from "@/components/ViewTabs";
-import { RegionPicker } from "@/components/RegionPicker";
-import { BasketEditor } from "@/components/BasketEditor";
+import { BasketSheet } from "@/components/BasketSheet";
 import { ChoroplethMap } from "@/components/ChoroplethMap";
 import { TrendChart } from "@/components/TrendChart";
 import { DriversChart } from "@/components/DriversChart";
+import { AIAnalysis } from "@/components/AIAnalysis";
+import { Card, CardContent } from "@/components/ui/card";
+
+function Navbar() {
+  return (
+    <nav className="app-navbar">
+      <div className="mx-auto max-w-6xl px-4 h-12 flex items-center">
+        <div className="flex items-center gap-3">
+          <span className="app-brand">
+            CLAUDE <span className="app-brand-pip" />
+          </span>
+          <span
+            className="hidden sm:block h-3.5 w-px"
+            style={{ background: "oklch(1 0 0 / 18%)" }}
+          />
+          <span
+            className="hidden sm:block text-xs font-medium tracking-wide"
+            style={{ color: "oklch(0.72 0.04 155)" }}
+          >
+            Computing Living Affordability Using Data Exploration
+          </span>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mt-10 px-4 pb-8 mx-auto max-w-6xl">
+      <div
+        className="rounded-3xl overflow-hidden px-8 py-7"
+        style={{ background: "var(--nav-bg)", color: "var(--nav-fg)" }}
+      >
+        {/* Top row */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+          <div>
+            <p className="app-brand text-[1.05rem]">
+              CLAUDE <span className="app-brand-pip" />
+            </p>
+            <p
+              className="mt-1.5 text-xs leading-relaxed max-w-xs"
+              style={{ color: "oklch(0.68 0.07 155)" }}
+            >
+              Computing Living Affordability Using Data Exploration
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start sm:items-end gap-1">
+            <p
+              className="text-[0.625rem] font-bold uppercase tracking-widest mb-1"
+              style={{ color: "oklch(0.55 0.06 155)" }}
+            >
+              Authors
+            </p>
+            <p className="text-sm font-medium" style={{ color: "var(--nav-fg)" }}>
+              Jermel Lapaz
+            </p>
+            <p className="text-sm font-medium" style={{ color: "var(--nav-fg)" }}>
+              Mary Jannin Ramacula
+            </p>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div
+          className="my-5 h-px"
+          style={{ background: "oklch(1 0 0 / 8%)" }}
+        />
+
+        {/* Bottom row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <p
+            className="text-[0.6875rem]"
+            style={{ color: "oklch(0.55 0.05 155)" }}
+          >
+            Data sources: PSA · NWPC · BSP
+          </p>
+          <p
+            className="text-[0.6875rem]"
+            style={{ color: "oklch(0.45 0.04 155)" }}
+          >
+            © {new Date().getFullYear()} CLAUDE Project
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
 
 function App() {
   const { panel, regression, geo, loading, error } = useData();
@@ -18,35 +106,44 @@ function App() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading data…</p>
-      </div>
+      <>
+        <Navbar />
+        <div className="flex min-h-[80vh] items-center justify-center">
+          <div className="text-center space-y-3">
+            <div className="loading-spinner mx-auto" />
+            <p className="text-sm text-muted-foreground">Loading data…</p>
+          </div>
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg font-semibold text-destructive">
-            Failed to load data
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+      <>
+        <Navbar />
+        <div className="flex min-h-[80vh] items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg font-semibold text-destructive">Failed to load data</p>
+            <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   const latest = getLatestMonth(panel);
   const earliest = getEarliestMonth(panel);
   const current = panel.filter((r) => r.month === latest);
-
   const isNational = region === "PHILIPPINES";
 
   function averageRow(rows: typeof panel): typeof panel[0] | undefined {
     if (rows.length === 0) return undefined;
     const numericKeys = Object.keys(rows[0]).filter(
-      (k) => k !== "region" && k !== "month" && typeof rows[0][k as keyof typeof rows[0]] === "number",
+      (k) =>
+        k !== "region" &&
+        k !== "month" &&
+        typeof rows[0][k as keyof typeof rows[0]] === "number",
     ) as (keyof typeof rows[0])[];
     const avg = { ...rows[0], region: "PHILIPPINES" };
     for (const key of numericKeys) {
@@ -57,69 +154,97 @@ function App() {
     return avg;
   }
 
-  const selected = isNational ? averageRow(current) : current.find((r) => r.region === region);
+  const selected = isNational
+    ? averageRow(current)
+    : current.find((r) => r.region === region);
   const dtf = selected ? computeDaysToFeed(selected) : undefined;
 
   const baselineData = panel.filter((r) => r.month === earliest);
-  const baselineRow = isNational ? averageRow(baselineData) : baselineData.find((r) => r.region === region);
+  const baselineRow = isNational
+    ? averageRow(baselineData)
+    : baselineData.find((r) => r.region === region);
   const baselineDtf = baselineRow ? computeDaysToFeed(baselineRow) : undefined;
 
   const monthlyBasket =
-    dtf !== undefined && selected
-      ? dtf * selected.dailyWage
-      : undefined;
+    dtf !== undefined && selected ? dtf * selected.dailyWage : undefined;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <Header
-        region={region}
-        daysToFeed={dtf}
-        dailyWage={selected?.dailyWage}
-        monthlyBasket={monthlyBasket}
-        baselineDtf={baselineDtf}
-      />
+    <>
+      <Navbar />
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <ViewTabs active={view} onChange={setView} />
-        <RegionPicker
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        <Header
+          region={region}
           regions={getUniqueRegions(panel)}
-          selected={region}
-          onChange={setRegion}
+          onRegionChange={setRegion}
+          daysToFeed={dtf}
+          dailyWage={selected?.dailyWage}
+          monthlyBasket={monthlyBasket}
+          baselineDtf={baselineDtf}
+        />
+
+        {/* Controls row */}
+        <div className="mb-4">
+          <ViewTabs active={view} onChange={setView} />
+        </div>
+
+        {/* Main content — full width now that basket is in a sheet */}
+        <Card className="min-w-0 gap-0 py-0 rounded-xl shadow-sm">
+          <CardContent className="p-4">
+            <Activity mode={view === "map" ? "visible" : "hidden"}>
+              <div className="view-panel">
+                <ChoroplethMap
+                  geo={geo}
+                  data={current}
+                  selectedRegion={region}
+                  onRegionClick={setRegion}
+                  computeDaysToFeed={computeDaysToFeed}
+                />
+              </div>
+            </Activity>
+            <Activity mode={view === "trend" ? "visible" : "hidden"}>
+              <div className="view-panel">
+                <TrendChart
+                  data={panel}
+                  region={region}
+                  computeDaysToFeed={computeDaysToFeed}
+                />
+              </div>
+            </Activity>
+            <Activity mode={view === "drivers" ? "visible" : "hidden"}>
+              <div className="view-panel">
+                <DriversChart regression={regression} />
+              </div>
+            </Activity>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AI Analysis — below main chart card */}
+      <div className="mx-auto max-w-6xl px-4 pb-6">
+        <AIAnalysis
+          region={region}
+          panel={panel}
+          regression={regression}
+          daysToFeed={dtf}
+          baselineDtf={baselineDtf}
+          dailyWage={selected?.dailyWage}
+          monthlyBasket={monthlyBasket}
+          computeDaysToFeed={computeDaysToFeed}
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-        <main className="min-w-0 rounded-lg border bg-card p-4">
-          {view === "map" && (
-            <ChoroplethMap
-              geo={geo}
-              data={current}
-              selectedRegion={region}
-              onRegionClick={setRegion}
-              computeDaysToFeed={computeDaysToFeed}
-            />
-          )}
-          {view === "trend" && (
-            <TrendChart
-              data={panel}
-              region={region}
-              computeDaysToFeed={computeDaysToFeed}
-            />
-          )}
-          {view === "drivers" && <DriversChart regression={regression} />}
-        </main>
+      <Footer />
 
-        <aside className="space-y-3">
-          <BasketEditor
-            basket={basket}
-            onChange={setBasket}
-            onReset={resetBasket}
-            sampleRow={selected}
-            computeDaysToFeed={computeDaysToFeed}
-          />
-        </aside>
-      </div>
-    </div>
+      {/* Floating basket — renders its own FAB + Sheet */}
+      <BasketSheet
+        basket={basket}
+        onChange={setBasket}
+        onReset={resetBasket}
+        sampleRow={selected}
+        computeDaysToFeed={computeDaysToFeed}
+      />
+    </>
   );
 }
 

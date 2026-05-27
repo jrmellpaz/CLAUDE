@@ -1,3 +1,11 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface RegionPickerProps {
   regions: string[];
   selected: string;
@@ -7,24 +15,24 @@ interface RegionPickerProps {
 export function RegionPicker({ regions, selected, onChange }: RegionPickerProps) {
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="region-select" className="text-sm font-medium text-muted-foreground">
-        Region
-      </label>
-      <select
-        id="region-select"
+      <Select
         value={selected}
-        onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border bg-background px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        onValueChange={(v) => onChange(v as string)}
       >
-        <option value="PHILIPPINES">All Philippines</option>
-        {regions
-          .filter((r) => r !== "PHILIPPINES")
-          .map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-      </select>
+        <SelectTrigger className="w-auto min-w-[11rem]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="PHILIPPINES">All Philippines</SelectItem>
+          {regions
+            .filter((r) => r !== "PHILIPPINES")
+            .map((r) => (
+              <SelectItem key={r} value={r}>
+                {r}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

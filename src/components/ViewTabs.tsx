@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type View = "map" | "trend" | "drivers";
 
@@ -15,21 +15,19 @@ const tabs: { value: View; label: string }[] = [
 
 export function ViewTabs({ active, onChange }: ViewTabsProps) {
   return (
-    <div className="inline-flex rounded-lg border bg-muted p-0.5">
-      {tabs.map((tab) => (
-        <button
-          key={tab.value}
-          onClick={() => onChange(tab.value)}
-          className={cn(
-            "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-            active === tab.value
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
+    <Tabs
+      value={active}
+      onValueChange={(v) => {
+        if (v) onChange(v as View);
+      }}
+    >
+      <TabsList>
+        {tabs.map((tab) => (
+          <TabsTrigger key={tab.value} value={tab.value}>
+            {tab.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }

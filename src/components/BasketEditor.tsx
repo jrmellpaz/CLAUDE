@@ -1,6 +1,8 @@
-import { useState } from "react";
 import type { BasketItem, PanelRow } from "@/types";
 import { formatPeso } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 
 interface BasketEditorProps {
   basket: BasketItem[];
@@ -17,11 +19,9 @@ export function BasketEditor({
   sampleRow,
   computeDaysToFeed,
 }: BasketEditorProps) {
-  const [open, setOpen] = useState(false);
-
   const updateItem = (index: number, patch: Partial<BasketItem>) => {
     const next = basket.map((item, i) =>
-      i === index ? { ...item, ...patch } : item
+      i === index ? { ...item, ...patch } : item,
     );
     onChange(next);
   };
@@ -40,97 +40,125 @@ export function BasketEditor({
     sampleRow && computeDaysToFeed ? computeDaysToFeed(sampleRow) : undefined;
 
   return (
-    <div className="rounded-lg border bg-card">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium"
-      >
-        <span>Customize basket</span>
-        <span className="text-xs text-muted-foreground">
-          {open ? "collapse" : "expand"}
-        </span>
-      </button>
+    <div className="flex flex-col gap-0 min-h-0">
 
-      {open && (
-        <div className="border-t px-3 pb-3 pt-2">
-          <div className="space-y-2">
-            {basket.map((item, i) => {
-              const price = sampleRow ? Number(sampleRow[item.key]) || 0 : 0;
-              const cost = item.enabled ? item.qty * price : 0;
-              const keyStr = String(item.key);
-              const step =
-                item.unit === "pc" ? 1 : keyStr.includes("rice") ? 0.05 : 0.01;
-              const max = item.unit === "pc" ? 10 : keyStr.includes("rice") ? 2 : 1;
+      {/* ── Item list ──────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-6 pb-2">
+        {/* Column headers */}
+        <div className="grid grid-cols-[auto_1fr_5rem_1.5rem_4rem] gap-x-2 mb-1 px-0.5 sticky top-0 bg-popover pt-4 pb-2 border-b border-border/40">
+          <span />
+          <span className="text-[0.6rem] font-bold uppercase tracking-widest text-muted-foreground/60">Item</span>
+          <span className="text-[0.6rem] font-bold uppercase tracking-widest text-muted-foreground/60 text-right">Qty</span>
+          <span />
+          <span className="text-[0.6rem] font-bold uppercase tracking-widest text-muted-foreground/60 text-right">Cost</span>
+        </div>
 
-              return (
-                <div key={String(item.key)} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={item.enabled}
-                    onChange={(e) =>
-                      updateItem(i, { enabled: e.target.checked })
-                    }
-                    className="h-4 w-4 rounded border accent-primary"
-                  />
-                  <span className="w-36 truncate">{item.label}</span>
-                  <input
-                    type="number"
-                    value={item.qty}
-                    min={0}
-                    max={max}
-                    step={step}
-                    disabled={!item.enabled}
-                    onChange={(e) =>
-                      updateItem(i, {
-                        qty: Math.max(0, parseFloat(e.target.value) || 0),
-                      })
-                    }
-                    className="w-16 rounded border bg-background px-1.5 py-0.5 text-right tabular-nums disabled:opacity-40"
-                  />
-                  <span className="w-8 text-xs text-muted-foreground">
-                    {item.unit}
-                  </span>
-                  <span className="w-16 text-right text-xs tabular-nums text-muted-foreground">
-                    {sampleRow ? formatPeso(cost) : "—"}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+        <div className="space-y-0 mt-1">
+          {basket.map((item, i) => {
+            const price = sampleRow ? Number(sampleRow[item.key]) || 0 : 0;
+            const cost = item.enabled ? item.qty * price : 0;
+            const keyStr = String(item.key);
+            const step =
+              item.unit === "pc" ? 1 : keyStr.includes("rice") ? 0.05 : 0.01;
+            const max =
+              item.unit === "pc" ? 10 : keyStr.includes("rice") ? 2 : 1;
 
-          <div className="mt-3 border-t pt-2 text-xs text-muted-foreground">
-            {sampleRow && (
-              <div className="space-y-0.5">
-                <p>
-                  Daily/person: <strong>{formatPeso(dailyCostPP)}</strong> |
-                  Daily/household: <strong>{formatPeso(dailyCostHH)}</strong>
-                </p>
-                <p>
-                  Monthly: <strong>{formatPeso(monthlyCost)}</strong>
-                  {dtf !== undefined && (
-                    <>
-                      {" "}
-                      | Days to feed:{" "}
-                      <strong className="text-foreground">
-                        {dtf.toFixed(1)}
-                      </strong>
-                    </>
-                  )}
-                </p>
-                <p className="mt-1 text-muted-foreground/70">
-                  Prices for {sampleRow.region}, latest month
-                </p>
+            return (
+              <div
+                key={String(item.key)}
+                className="grid grid-cols-[auto_1fr_5rem_1.5rem_4rem] gap-x-2 items-center py-2.5 rounded-lg px-0.5 transition-colors hover:bg-muted/40"
+              >
+                <Checkbox
+                  checked={item.enabled}
+                  onCheckedChange={(checked) =>
+                    updateItem(i, { enabled: checked as boolean })
+                  }
+                />
+                <span
+                  className={`text-xs truncate transition-opacity ${
+                    item.enabled ? "text-foreground" : "text-muted-foreground/50"
+                  }`}
+                >
+                  {item.label}
+                </span>
+                <Input
+                  type="number"
+                  value={item.qty}
+                  min={0}
+                  max={max}
+                  step={step}
+                  disabled={!item.enabled}
+                  onChange={(e) =>
+                    updateItem(i, {
+                      qty: Math.max(0, parseFloat(e.target.value) || 0),
+                    })
+                  }
+                  className="h-6 w-full rounded-md text-right text-xs tabular-nums px-1.5 py-0"
+                />
+                <span className="text-[0.625rem] text-muted-foreground text-center">
+                  {item.unit}
+                </span>
+                <span
+                  className={`text-right text-[0.6875rem] tabular-nums transition-opacity ${
+                    item.enabled ? "text-muted-foreground" : "text-muted-foreground/40"
+                  }`}
+                >
+                  {sampleRow ? formatPeso(cost) : "—"}
+                </span>
               </div>
-            )}
-            <button
-              onClick={onReset}
-              className="mt-2 rounded border px-2 py-1 text-xs hover:bg-muted"
-            >
-              Reset to defaults
-            </button>
-          </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Totals ─────────────────────────────────────────────── */}
+      {sampleRow && (
+        <div className="border-t border-border/60 px-6 pt-4 pb-2 space-y-1.5 shrink-0">
+          <SummaryRow label="Daily / person"    value={formatPeso(dailyCostPP)} />
+          <SummaryRow label="Daily / household" value={formatPeso(dailyCostHH)} />
+          <div className="h-px bg-border/60 my-1" />
+          <SummaryRow label="Monthly total" value={formatPeso(monthlyCost)} bold />
+          {dtf !== undefined && (
+            <SummaryRow label="Days to feed" value={`${dtf.toFixed(1)} days`} accent />
+          )}
         </div>
       )}
+
+      {/* ── Actions ────────────────────────────────────────────── */}
+      <div className="px-6 pt-3 pb-6 shrink-0">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onReset}
+          className="w-full rounded-xl text-xs text-muted-foreground"
+        >
+          Reset to defaults
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  bold = false,
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  bold?: boolean;
+  accent?: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="text-xs text-muted-foreground shrink-0">{label}</span>
+      <span
+        className={`tabular-nums text-right truncate text-xs ${bold ? "font-bold text-sm" : "font-medium"}`}
+        style={accent ? { color: "var(--primary)" } : undefined}
+      >
+        {value}
+      </span>
     </div>
   );
 }

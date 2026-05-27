@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
 @import "@fontsource-variable/inter";
 
 @custom-variant dark (&:is(.dark *));
@@ -12,65 +12,46 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --background: oklch(1 0 0);
-
-  --foreground: oklch(0.145 0 0);
-
+  --background: oklch(0.974 0.007 82);
+  --foreground: oklch(0.165 0.015 205);
   --card: oklch(1 0 0);
-
-  --card-foreground: oklch(0.145 0 0);
-
+  --card-foreground: oklch(0.165 0.015 205);
   --popover: oklch(1 0 0);
-
-  --popover-foreground: oklch(0.145 0 0);
-
-  --primary: oklch(0.508 0.118 165.612);
-
-  --primary-foreground: oklch(0.979 0.021 166.113);
-
-  --secondary: oklch(0.967 0.001 286.375);
-
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-
-  --muted: oklch(0.97 0 0);
-
-  --muted-foreground: oklch(0.556 0 0);
-
-  --accent-foreground: oklch(0.205 0 0);
-
+  --popover-foreground: oklch(0.165 0.015 205);
+  --primary: oklch(0.375 0.09 155);
+  --primary-foreground: oklch(0.972 0.018 155);
+  --secondary: oklch(0.945 0.012 82);
+  --secondary-foreground: oklch(0.22 0.015 200);
+  --muted: oklch(0.955 0.007 82);
+  --muted-foreground: oklch(0.515 0.015 200);
+  --accent: oklch(0.945 0.022 155);
+  --accent-foreground: oklch(0.22 0.02 200);
   --destructive: oklch(0.577 0.245 27.325);
-
-  --input: oklch(0.922 0 0);
-
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.875 0.010 82);
+  --input: oklch(0.875 0.010 82);
+  --ring: oklch(0.375 0.09 155);
 
   --chart-1: oklch(0.845 0.143 164.978);
-
   --chart-2: oklch(0.696 0.17 162.48);
-
   --chart-3: oklch(0.596 0.145 163.225);
-
   --chart-4: oklch(0.508 0.118 165.612);
-
   --chart-5: oklch(0.432 0.095 166.913);
 
-  --radius: 0.875rem;
+  --radius: 0.625rem;
 
   --sidebar: oklch(0.985 0 0);
-
   --sidebar-foreground: oklch(0.145 0 0);
-
-  --sidebar-primary: oklch(0.596 0.145 163.225);
-
-  --sidebar-primary-foreground: oklch(0.979 0.021 166.113);
-
-  --sidebar-accent: oklch(0.97 0 0);
-
+  --sidebar-primary: oklch(0.375 0.09 155);
+  --sidebar-primary-foreground: oklch(0.972 0.018 155);
+  --sidebar-accent: oklch(0.955 0.007 82);
   --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.875 0.010 82);
+  --sidebar-ring: oklch(0.375 0.09 155);
 
-  --sidebar-border: oklch(0.922 0 0);
-
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Custom app tokens */
+  --nav-bg: oklch(0.215 0.065 160);
+  --nav-fg: oklch(0.920 0.060 155);
+  --nav-accent: oklch(0.70 0.18 155);
 }
 
 body {
@@ -78,7 +59,8 @@ body {
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
+  --font-heading: 'Lora', Georgia, serif;
+  --font-brand: 'Syne', 'Inter Variable', sans-serif;
   --font-sans: 'Inter Variable', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -152,6 +134,10 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --nav-bg: oklch(0.18 0.055 160);
+  --nav-fg: oklch(0.88 0.06 155);
+  --nav-accent: oklch(0.68 0.17 155);
 }
 
 @layer base {
@@ -167,4 +153,183 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* ── App Navbar ─────────────────────────────────────────────────── */
+.app-navbar {
+  background-color: oklch(0.215 0.065 160 / 0.82);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  color: var(--nav-fg);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid oklch(0.28 0.06 160 / 45%);
+}
+
+.app-brand {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--nav-fg);
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.app-brand-pip {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: var(--nav-accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Question heading (H1) ──────────────────────────────────────── */
+.question-heading {
+  font-family: 'Lora', Georgia, serif;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.3;
+}
+
+/* ── KPI Cards ──────────────────────────────────────────────────── */
+.kpi-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.04), 0 1px 4px oklch(0 0 0 / 0.03);
+}
+
+.kpi-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+  opacity: 0.75;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.kpi-subtitle {
+  margin-top: 0.375rem;
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── View Tab Switcher ──────────────────────────────────────────── */
+.view-tabs {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.04);
+}
+
+.view-tab {
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  letter-spacing: 0.01em;
+  transition: color 0.12s ease, background 0.12s ease;
+  white-space: nowrap;
+}
+
+.view-tab:last-child {
+  border-right: none;
+}
+
+.view-tab:hover:not(.view-tab-active) {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.view-tab-active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+}
+
+/* ── Basket Editor ──────────────────────────────────────────────── */
+.basket-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.1875rem 0;
+}
+
+/* ── Sheet panel: slide-only, faster exit ───────────────────────── */
+.sheet-panel {
+  transition-property: transform, translate; /* Tailwind v4 uses CSS `translate` not `transform` */
+  transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1); /* ease-out spring */
+  transition-duration: 300ms;
+}
+
+.sheet-panel[data-ending-style] {
+  transition-timing-function: cubic-bezier(0.5, 0, 0.75, 0); /* ease-in snap */
+  transition-duration: 160ms;
+}
+
+/* ── View panels (Activity-preserved tab content) ───────────────── */
+/*
+ * React <Activity mode="hidden"> keeps components mounted but sets
+ * display:none on the wrapper. @starting-style fires CSS transitions
+ * when an element enters the rendering tree — including when a parent
+ * leaves display:none — so each tab gets a smooth entrance every time
+ * it becomes active, with zero JavaScript.
+ *
+ * Browser support: Chrome 117+, Safari 17.4+, Firefox 129+
+ */
+.view-panel {
+  transition:
+    opacity    150ms cubic-bezier(0.16, 1, 0.3, 1),
+    translate  150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@starting-style {
+  .view-panel {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+/* ── Animated loading spinner ───────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+/* ── AI streaming cursor blink ──────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }
