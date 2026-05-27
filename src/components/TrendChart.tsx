@@ -6,7 +6,6 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-import type { TooltipProps } from "recharts";
 import type { PanelRow } from "@/types";
 import { formatMonth } from "@/lib/utils";
 
@@ -38,7 +37,13 @@ const EXTRA_COLORS = [
   "oklch(0.60 0.18 185)",
 ];
 
-function TrendTooltip({ active, payload, label }: TooltipProps<number, string>) {
+interface TrendTooltipProps {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number; color?: string }>;
+  label?: string;
+}
+
+function TrendTooltip({ active, payload, label }: TrendTooltipProps) {
   if (!active || !payload?.length) return null;
 
   // Sort: national first, then by value descending
