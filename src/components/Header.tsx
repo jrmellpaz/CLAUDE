@@ -1,6 +1,7 @@
 import { formatPeso } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { RegionPicker } from "@/components/RegionPicker";
+import type { CustomParams } from "@/types";
 
 interface HeaderProps {
   region: string;
@@ -10,6 +11,8 @@ interface HeaderProps {
   dailyWage?: number;
   monthlyBasket?: number;
   baselineDtf?: number;
+  customParams: CustomParams | null;
+  onCustomParamsChange: (params: CustomParams | null) => void;
 }
 
 export function Header({
@@ -20,6 +23,8 @@ export function Header({
   dailyWage,
   monthlyBasket,
   baselineDtf,
+  customParams,
+  onCustomParamsChange,
 }: HeaderProps) {
   const change =
     daysToFeed !== undefined && baselineDtf !== undefined && baselineDtf > 0
@@ -48,6 +53,8 @@ export function Header({
           regions={regions}
           selected={region}
           onChange={onRegionChange}
+          customParams={customParams}
+          onCustomParamsChange={onCustomParamsChange}
         />
       </div>
 
@@ -56,7 +63,7 @@ export function Header({
         <KpiCard
           label="Days to feed"
           value={daysToFeed !== undefined ? daysToFeed.toFixed(1) : "—"}
-          subtitle={region}
+          subtitle={region === "CUSTOM" ? "Custom scenario" : region}
           accent="primary"
         />
         <KpiCard
@@ -84,7 +91,7 @@ export function Header({
         <KpiCard
           label="Daily min. wage"
           value={dailyWage !== undefined ? formatPeso(dailyWage) : "—"}
-          subtitle={region}
+          subtitle={region === "CUSTOM" ? "User-defined" : region}
           accent="none"
         />
         <KpiCard

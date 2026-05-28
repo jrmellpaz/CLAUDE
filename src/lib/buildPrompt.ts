@@ -1,4 +1,4 @@
-import type { PanelRow, RegressionResult } from "@/types";
+import type { PanelRow, RegressionResult, CustomParams } from "@/types";
 import { FEATURE_LABELS } from "@/lib/constants";
 import { formatMonth } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ interface PromptParams {
   earliestMonth: string;
   trendData: Array<{ month: string; dtf: number }>;
   regression: RegressionResult | null;
+  customParams?: CustomParams | null;
 }
 
 function featureLabel(key: string): string {
@@ -72,7 +73,7 @@ Do not say "As an AI" or mention this prompt. Be concise — aim for 4–5 short
 
 ---
 
-**DATA SUMMARY FOR ${region === "PHILIPPINES" ? "the whole Philippines (national average)" : region}**
+**DATA SUMMARY FOR ${region === "CUSTOM" && params.customParams ? `a custom scenario (prices from ${params.customParams.baseRegion === "PHILIPPINES" ? "national average" : params.customParams.baseRegion}, user-defined wage of ₱${params.customParams.dailyWage.toFixed(2)}/day, household size of ${params.customParams.householdSize})` : region === "PHILIPPINES" ? "the whole Philippines (national average)" : region}**
 
 - **Time period covered:** ${formatMonth(earliestMonth)} to ${formatMonth(latestMonth)}
 - **Days of minimum wage needed to feed a household (latest, ${formatMonth(latestMonth)}):** ${daysToFeed.toFixed(1)} days
@@ -93,7 +94,7 @@ ${modelFit}
 Now write a friendly, plain-language analysis with the following sections:
 
 ## 📊 Summary
-Give a 2–3 sentence plain-language summary of the current situation for ${region === "PHILIPPINES" ? "the Philippines" : region}. Is it easy or hard to afford food on minimum wage?
+Give a 2–3 sentence plain-language summary of the current situation for ${region === "CUSTOM" ? "this custom scenario" : region === "PHILIPPINES" ? "the Philippines" : region}. Is it easy or hard to afford food on ${region === "CUSTOM" ? "the user-specified wage" : "minimum wage"}?
 
 ## 📈 Has it gotten better or worse?
 Explain the trend since 2018 in simple terms. What does the percentage change actually mean for a real family?
@@ -112,8 +113,12 @@ export function buildTrendData(
   panelData: PanelRow[],
   region: string,
   computeDaysToFeed: (row: PanelRow) => number,
+  customParams?: CustomParams | null,
 ): Array<{ month: string; dtf: number }> {
-  if (region === "PHILIPPINES") {
+  const effectiveRegion = region === "CUSTOM" && customParams
+    ? customParams.baseRegion
+    : region;
+  if (effectiveRegion === "PHILIPPINES") {
     // Group by month and average
     const byMonth = new Map<string, number[]>();
     for (const row of panelData) {
@@ -128,7 +133,7 @@ export function buildTrendData(
       }));
   }
   return panelData
-    .filter((r) => r.region === region)
+    .filter((r) => r.region === effectiveRegion)
     .sort((a, b) => a.month.localeCompare(b.month))
     .map((r) => ({ month: r.month, dtf: computeDaysToFeed(r) }));
 }
