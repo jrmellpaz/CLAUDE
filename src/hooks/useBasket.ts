@@ -15,8 +15,9 @@ export function useBasket() {
     const dailyCostPP = basket
       .filter((item) => item.enabled)
       .reduce((sum, item) => {
-        const price = Number(row[item.key]) || 0;
-        return sum + item.qty * price;
+        const raw = row[item.key];
+        if (raw == null) return sum;
+        return sum + item.qty * (Number(raw) || 0);
       }, 0);
 
     const dailyCostHH = dailyCostPP * row.householdSize;

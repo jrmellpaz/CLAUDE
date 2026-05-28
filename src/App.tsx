@@ -191,17 +191,16 @@ function App() {
 
   function averageRow(rows: typeof panel): typeof panel[0] | undefined {
     if (rows.length === 0) return undefined;
-    const numericKeys = Object.keys(rows[0]).filter(
-      (k) =>
-        k !== "region" &&
-        k !== "month" &&
-        typeof rows[0][k as keyof typeof rows[0]] === "number",
-    ) as (keyof typeof rows[0])[];
+    const allKeys = Object.keys(rows[0]).filter(
+      (k) => k !== "region" && k !== "month",
+    );
     const avg = { ...rows[0], region: "PHILIPPINES" };
-    for (const key of numericKeys) {
-      const vals = rows.map((r) => r[key] as number).filter((v) => v != null);
-      (avg as Record<string, string | number>)[key as string] =
-        vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    for (const key of allKeys) {
+      const vals = rows
+        .map((r) => r[key as keyof typeof r])
+        .filter((v): v is number => typeof v === "number");
+      (avg as Record<string, string | number | null>)[key] =
+        vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
     }
     return avg;
   }
@@ -255,8 +254,9 @@ function App() {
   const fabEnabledCount = basket.filter((b) => b.enabled).length;
   const fabMonthlyCost = selected
     ? basket.filter((b) => b.enabled).reduce((sum, item) => {
-        const price = Number(selected[item.key as keyof typeof selected]) || 0;
-        return sum + item.qty * price;
+        const raw = selected[item.key as keyof typeof selected];
+        if (raw == null) return sum;
+        return sum + item.qty * (Number(raw) || 0);
       }, 0) * selected.householdSize * 30
     : 0;
 

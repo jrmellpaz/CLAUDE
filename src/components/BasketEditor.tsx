@@ -43,8 +43,9 @@ export function BasketEditor({
     ? basket
         .filter((item) => item.enabled)
         .reduce((sum, item) => {
-          const price = Number(sampleRow[item.key]) || 0;
-          return sum + item.qty * price;
+          const raw = sampleRow[item.key];
+          if (raw == null) return sum;
+          return sum + item.qty * (Number(raw) || 0);
         }, 0)
     : 0;
   const dailyCostHH = sampleRow ? dailyCostPP * sampleRow.householdSize : 0;
@@ -56,7 +57,8 @@ export function BasketEditor({
     category: cat,
     items: basket
       .map((item, index) => ({ item, index }))
-      .filter(({ item }) => item.category === cat),
+      .filter(({ item }) => item.category === cat)
+      .filter(({ item }) => !sampleRow || sampleRow[item.key] != null),
   })).filter((g) => g.items.length > 0);
 
   const toggleCategory = (cat: string) => {
