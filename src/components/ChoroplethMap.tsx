@@ -206,10 +206,18 @@ export function ChoroplethMap({
   if (!regionGeo) return <p className="text-muted-foreground">Loading map…</p>;
 
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden rounded-lg">
+      <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+        <defs>
+          <pattern id="map-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <circle cx="10" cy="10" r="0.8" style={{ fill: "color-mix(in oklch, var(--muted-foreground) 60%, transparent)" }} />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#map-dots)" />
+      </svg>
       <svg
         ref={svgRef}
-        className="mx-auto w-full max-w-lg text-foreground"
+        className="relative mx-auto w-full max-w-lg text-foreground"
       />
       <div
         ref={tooltipRef}

@@ -5,7 +5,11 @@
       "WebFetch(domain:ui.shadcn.com)",
       "Bash(pnpm add *)",
       "Bash(pnpm exec *)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(pnpm dev *)",
+      "Bash(where jupyter *)",
+      "Bash(where jupyter-nbconvert *)",
+      "Bash(where python *)"
     ]
   }
 }

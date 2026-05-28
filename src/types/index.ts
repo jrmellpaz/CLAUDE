@@ -7,6 +7,58 @@ export interface PanelRow {
   eggPrice: number;
   fishPrice: number;
   porkPrice: number;
+  // Cereals & grains
+  cornWhitePrice: number;
+  cornYellowPrice: number;
+  monggoPrice: number;
+  // Root crops
+  camotePrice: number;
+  cassavaPrice: number;
+  gabiPrice: number;
+  potatoPrice: number;
+  singkamasPrice: number;
+  // Leafy vegetables
+  kangkongPrice: number;
+  pechayNativePrice: number;
+  pechayChinesePrice: number;
+  alugbatiPrice: number;
+  gabiLeavesPrice: number;
+  malunggayPrice: number;
+  onionLeavesPrice: number;
+  cabbagePrice: number;
+  // Fruit vegetables
+  tomatoPrice: number;
+  talongPrice: number;
+  ampalayaPrice: number;
+  sayotePrice: number;
+  upoPrice: number;
+  squashPrice: number;
+  okraPrice: number;
+  pipinoPrice: number;
+  patolaPrice: number;
+  stringBeansPrice: number;
+  baguioBeansPrice: number;
+  // Other vegetables / aromatics
+  carrotPrice: number;
+  labanosPrice: number;
+  onionRedPrice: number;
+  onionWhitePrice: number;
+  garlicPrice: number;
+  gingerPrice: number;
+  // Fish & seafood
+  tilapiaPrice: number;
+  bangusPrice: number;
+  dilisPrice: number;
+  tulinganPrice: number;
+  budburonPrice: number;
+  barilisPrice: number;
+  tahongPrice: number;
+  gulamanDagatPrice: number;
+  latoPrice: number;
+  // Meat & poultry
+  chickenNativePrice: number;
+  edibleOffalPrice: number;
+  // Derived
   dailyBasketPp: number;
   dailyBasketHh: number;
   monthlyBasket: number;
@@ -20,6 +72,15 @@ export interface PanelRow {
   [key: string]: string | number;
 }
 
+export type BasketCategory =
+  | "Grains & staples"
+  | "Root crops"
+  | "Leafy vegetables"
+  | "Fruit vegetables"
+  | "Other vegetables"
+  | "Fish & seafood"
+  | "Meat & poultry";
+
 export interface BasketItem {
   key: keyof PanelRow;
   label: string;
@@ -27,6 +88,7 @@ export interface BasketItem {
   defaultQty: number;
   qty: number;
   enabled: boolean;
+  category: BasketCategory;
 }
 
 export interface RegressionCoef {
