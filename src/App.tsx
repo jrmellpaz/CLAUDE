@@ -3,6 +3,7 @@ import { useData } from "@/hooks/useData";
 import { useBasket } from "@/hooks/useBasket";
 import { useTheme, type Theme } from "@/hooks/useTheme";
 import { getLatestMonth, getUniqueRegions, getEarliestMonth, formatPeso } from "@/lib/utils";
+import type { CustomParams } from "@/types";
 import { Header } from "@/components/Header";
 import { ViewTabs, type View } from "@/components/ViewTabs";
 import { BasketSheet } from "@/components/BasketSheet";
@@ -151,6 +152,7 @@ function App() {
   const { theme, setTheme } = useTheme();
   const [view, setView] = useState<View>("map");
   const [region, setRegion] = useState<string>("PHILIPPINES");
+  const [customParams, setCustomParams] = useState<CustomParams | null>(null);
   const [basketOpen, setBasketOpen] = useState(false);
 
   if (loading) {
@@ -185,6 +187,7 @@ function App() {
   const earliest = getEarliestMonth(panel);
   const current = panel.filter((r) => r.month === latest);
   const isNational = region === "PHILIPPINES";
+  const isCustom = region === "CUSTOM";
 
   function averageRow(rows: typeof panel): typeof panel[0] | undefined {
     if (rows.length === 0) return undefined;
@@ -203,15 +206,47 @@ function App() {
     return avg;
   }
 
-  const selected = isNational
-    ? averageRow(current)
-    : current.find((r) => r.region === region);
+  function resolveBaseRow(rows: typeof panel, baseRegion: string) {
+    return baseRegion === "PHILIPPINES"
+      ? averageRow(rows)
+      : rows.find((r) => r.region === baseRegion);
+  }
+
+  let selected: typeof panel[0] | undefined;
+  if (isCustom && customParams) {
+    const base = resolveBaseRow(current, customParams.baseRegion);
+    if (base) {
+      selected = {
+        ...base,
+        region: "CUSTOM",
+        dailyWage: customParams.dailyWage,
+        householdSize: customParams.householdSize,
+      };
+    }
+  } else if (isNational) {
+    selected = averageRow(current);
+  } else {
+    selected = current.find((r) => r.region === region);
+  }
   const dtf = selected ? computeDaysToFeed(selected) : undefined;
 
   const baselineData = panel.filter((r) => r.month === earliest);
-  const baselineRow = isNational
-    ? averageRow(baselineData)
-    : baselineData.find((r) => r.region === region);
+  let baselineRow: typeof panel[0] | undefined;
+  if (isCustom && customParams) {
+    const base = resolveBaseRow(baselineData, customParams.baseRegion);
+    if (base) {
+      baselineRow = {
+        ...base,
+        region: "CUSTOM",
+        dailyWage: customParams.dailyWage,
+        householdSize: customParams.householdSize,
+      };
+    }
+  } else if (isNational) {
+    baselineRow = averageRow(baselineData);
+  } else {
+    baselineRow = baselineData.find((r) => r.region === region);
+  }
   const baselineDtf = baselineRow ? computeDaysToFeed(baselineRow) : undefined;
 
   const monthlyBasket =
@@ -238,6 +273,8 @@ function App() {
           dailyWage={selected?.dailyWage}
           monthlyBasket={monthlyBasket}
           baselineDtf={baselineDtf}
+          customParams={customParams}
+          onCustomParamsChange={setCustomParams}
         />
 
         {/* Controls row */}
@@ -253,7 +290,7 @@ function App() {
                 <ChoroplethMap
                   geo={geo}
                   data={current}
-                  selectedRegion={region}
+                  selectedRegion={isCustom ? "" : region}
                   onRegionClick={setRegion}
                   computeDaysToFeed={computeDaysToFeed}
                 />
@@ -263,7 +300,7 @@ function App() {
               <div className="view-panel">
                 <TrendChart
                   data={panel}
-                  region={region}
+                  region={isCustom && customParams ? customParams.baseRegion : region}
                   computeDaysToFeed={computeDaysToFeed}
                 />
               </div>
@@ -288,6 +325,7 @@ function App() {
           dailyWage={selected?.dailyWage}
           monthlyBasket={monthlyBasket}
           computeDaysToFeed={computeDaysToFeed}
+          customParams={customParams}
         />
       </div>
 

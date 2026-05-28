@@ -12,7 +12,7 @@ import {
   VolumeHighIcon,
   StopCircleIcon,
 } from "@hugeicons/core-free-icons";
-import type { PanelRow, RegressionResult } from "@/types";
+import type { PanelRow, RegressionResult, CustomParams } from "@/types";
 import { buildAnalysisPrompt, buildTrendData } from "@/lib/buildPrompt";
 import { useAIAnalysis } from "@/hooks/useAIAnalysis";
 import { useVoice } from "@/hooks/useVoice";
@@ -27,6 +27,7 @@ interface AIAnalysisProps {
   dailyWage?: number;
   monthlyBasket?: number;
   computeDaysToFeed: (row: PanelRow) => number;
+  customParams?: CustomParams | null;
 }
 
 // ── Skeleton ─────────────────────────────────────────────────────────────────
@@ -134,7 +135,7 @@ function StreamingIndicator({ region }: { region: string }) {
         <span className="w-1 h-1 rounded-full bg-primary animate-bounce [animation-delay:300ms]" />
       </span>
       Generating analysis for{" "}
-      {region === "PHILIPPINES" ? "the Philippines" : region}…
+      {region === "CUSTOM" ? "custom scenario" : region === "PHILIPPINES" ? "the Philippines" : region}…
     </div>
   );
 }
@@ -161,13 +162,14 @@ export function AIAnalysis({
   dailyWage,
   monthlyBasket,
   computeDaysToFeed,
+  customParams,
 }: AIAnalysisProps) {
   const { markdown, status, error, generate, cancel } = useAIAnalysis();
   const { voiceStatus, speak, stopSpeaking } = useVoice();
 
   const latestMonth = getLatestMonth(panel);
   const earliestMonth = getEarliestMonth(panel);
-  const trendData = buildTrendData(panel, region, computeDaysToFeed);
+  const trendData = buildTrendData(panel, region, computeDaysToFeed, customParams);
 
   // Auto-scroll into view on first streaming tick
   const cardRef = useRef<HTMLDivElement>(null);
@@ -209,6 +211,7 @@ export function AIAnalysis({
         earliestMonth,
         trendData,
         regression,
+        customParams,
       }),
     );
   };
@@ -289,7 +292,7 @@ export function AIAnalysis({
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
                   Get a plain-language breakdown of the food affordability data
                   for{" "}
-                  {region === "PHILIPPINES" ? "the Philippines" : region}
+                  {region === "CUSTOM" ? "your custom scenario" : region === "PHILIPPINES" ? "the Philippines" : region}
                 </p>
               </div>
               <Button

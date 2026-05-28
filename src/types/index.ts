@@ -91,6 +91,12 @@ export interface BasketItem {
   category: BasketCategory;
 }
 
+export interface CustomParams {
+  baseRegion: string;
+  dailyWage: number;
+  householdSize: number;
+}
+
 export interface RegressionCoef {
   value: number;
   std_err: number;
