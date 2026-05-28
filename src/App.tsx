@@ -191,12 +191,19 @@ function App() {
 
   function averageRow(rows: typeof panel): typeof panel[0] | undefined {
     if (rows.length === 0) return undefined;
-    const numericKeys = Object.keys(rows[0]).filter(
-      (k) =>
-        k !== "region" &&
-        k !== "month" &&
-        typeof rows[0][k as keyof typeof rows[0]] === "number",
-    ) as (keyof typeof rows[0])[];
+    // A column can be null in some regions (e.g. NCR has no corn price) while
+    // others populate it, so detect numeric columns across all rows — not just
+    // the first — otherwise those columns are dropped from the average and read
+    // back as 0.
+    const numericKeys = new Set<keyof typeof rows[0]>();
+    for (const row of rows) {
+      for (const k of Object.keys(row)) {
+        if (k === "region" || k === "month") continue;
+        if (typeof row[k as keyof typeof row] === "number") {
+          numericKeys.add(k as keyof typeof rows[0]);
+        }
+      }
+    }
     const avg = { ...rows[0], region: "PHILIPPINES" };
     for (const key of numericKeys) {
       const vals = rows.map((r) => r[key] as number).filter((v) => v != null);
